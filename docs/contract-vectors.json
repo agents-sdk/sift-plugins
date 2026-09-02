@@ -1,0 +1,67 @@
+{
+  "keys": {
+    "validBare": "0123456789abcdef01234567",
+    "validBareUpper": "0123456789ABCDEF01234567",
+    "validMarker": "<<stash:0123456789abcdef01234567>>",
+    "validMarkerWrapped": "  <<stash:0123456789abcdef01234567>>  ",
+    "invalidEmpty": "",
+    "invalidWhitespace": "   ",
+    "invalidShort": "abc123",
+    "invalidLong": "0123456789abcdef0123456789",
+    "invalidNonHex": "zzzzzzzzzzzzzzzzzzzzzzzz",
+    "invalidPath": "../etc/passwd",
+    "invalidMarkerBadKey": "<<stash:not-a-valid-key>>",
+    "invalidTraversal": "<<stash:../../../../tmp/evil>>"
+  },
+  "minLength": {
+    "default": 200,
+    "validNumber": 512,
+    "numericString": "350",
+    "invalidString": "nope",
+    "zero": 0,
+    "negative": -1,
+    "nan": null
+  },
+  "hints": {
+    "bash": {
+      "toolName": "bash",
+      "input": { "command": "find . -name '*.log'" },
+      "expected": "shell command output: find . -name '*.log'"
+    },
+    "readPi": {
+      "toolName": "read",
+      "input": { "path": "src/index.ts" },
+      "expected": "file content of src/index.ts"
+    },
+    "readOpenCode": {
+      "toolName": "read",
+      "input": { "filePath": "src/index.ts" },
+      "expected": "file content of src/index.ts"
+    },
+    "ls": {
+      "toolName": "ls",
+      "input": { "path": "/tmp" },
+      "expected": "directory listing of /tmp"
+    },
+    "glob": {
+      "toolName": "glob",
+      "input": { "pattern": "**/*.ts" },
+      "expected": "glob results for **/*.ts"
+    },
+    "grep": {
+      "toolName": "grep",
+      "input": { "pattern": "TODO" },
+      "expected": "grep results for TODO"
+    },
+    "find": {
+      "toolName": "find",
+      "input": { "pattern": "*.md" },
+      "expected": "find results for *.md"
+    },
+    "unknown": {
+      "toolName": "edit",
+      "input": {},
+      "expected": "tool edit output"
+    }
+  }
+}

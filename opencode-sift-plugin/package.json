@@ -1,0 +1,37 @@
+{
+  "name": "@agent-context/sift-opencode",
+  "version": "0.1.0",
+  "description": "OpenCode plugin that compresses tool results with @agent-context/sift",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./server": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "lib",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "sift",
+    "context-compression"
+  ],
+  "scripts": {
+    "test": "node --test --experimental-strip-types test/*.test.ts"
+  },
+  "dependencies": {
+    "@agent-context/sift": "0.0.1-alpha.7",
+    "@opencode-ai/plugin": "1.18.26"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0"
+  },
+  "engines": {
+    "opencode": ">=1.18.26 <2"
+  }
+}
