@@ -1,130 +1,111 @@
 # sift-plugins
 
-[Sift](https://github.com/agents-sdk/sift) 的 Agent 宿主适配器集合。它在大段工具结果进入模型上下文前调用 `@agent-context/sift` 压缩内容，减少 token 占用和 prompt cache 成本，并在需要时让 Agent 通过 `sift_retrieve` 取回有损压缩前的原文。
+为 [Pi](https://github.com/earendil-works/pi) 和 [OpenCode](https://github.com/anomalyco/opencode) 提供的上下文压缩扩展：读文件、构建日志、搜索结果、diff 这类大段工具输出，在进入模型上下文之前先被自动压缩，降低 token 占用和 prompt cache 成本；被省略的细节由 Agent 按需取回。
 
-本仓库只负责宿主接入；压缩算法、语言支持和 Node.js API 位于 [agents-sdk/sift](https://github.com/agents-sdk/sift)。
+压缩由 [Sift](https://github.com/agents-sdk/sift) 完成，按内容类型选择策略，遵循「无损优先、有损可恢复」：优先做 JSON minify、日志模板化等无损压缩；需要有损压缩时，原文先暂存到本地，上下文里只留摘要和 `<<stash:HASH>>` 标记，Agent 确实需要细节时再通过 `sift_retrieve` 取回。支持构建 / 测试日志、JSON、搜索结果、unified diff、重复文本和多种语言源码。
 
-## 为什么使用
+它只处理新产生的工具输出，不改写历史消息，也不是检索或记忆系统。
 
-代码读取、构建日志、搜索结果和 diff 往往会快速挤占 Agent 的上下文窗口。Sift 针对内容类型选择压缩方式，并遵循「无损优先、有损可恢复」：
+| 宿主 | npm 包 |
+| --- | --- |
+| [Pi](https://github.com/earendil-works/pi) | [`@agent-context/pi-sift`](https://www.npmjs.com/package/@agent-context/pi-sift) |
+| [OpenCode](https://github.com/anomalyco/opencode) | [`@agent-context/opencode-sift`](https://www.npmjs.com/package/@agent-context/opencode-sift) |
 
-- 优先进行 JSON minify、日志模板化等无损压缩；
-- 对 JSON 数组、构建/测试日志、搜索结果、unified diff、重复文本和多种语言源码做结构化压缩；
-- 有损压缩成功写入本地 stash 后，才在结果中留下 `<<stash:HASH>>`；
-- Agent 可调用 `sift_retrieve` 按 key 恢复原始工具输出。
+## 装上之后
 
-适配器仅压缩当前工具结果，不改写整包模型请求，也不跨消息删除历史内容。它不是检索、记忆、知识图谱、MCP 或 HTTP 服务。
+- 安装即启用，无需配置，对 Agent 透明：它看到的是等价或摘要后的内容，行为不变；
+- 不适合压缩的内容原样保留（条件见下）；
+- 工具输出占用的 token 明显减少。
 
 ```text
-工具执行
+工具输出（源码、日志、JSON、diff、搜索结果…）
    │
-   ▼
-宿主的 tool-result hook
-   │  跳过错误、截断、过短、非纯文本等结果
-   ▼
-Sift siftText
-   ├─ 无收益 ───────────────► 原样进入上下文
-   ├─ 无损压缩 ─────────────► 压缩结果进入上下文
-   └─ 有损压缩 ─► 本地 stash + <<stash:HASH>>
-                                      │
-                                      └─ sift_retrieve 按需恢复
+   ├─ 不适合 / 不值得压缩 ──► 原样保留
+   ├─ 可以无损压缩 ────────► 更短的等价内容
+   └─ 需要有损压缩 ──► 摘要 + <<stash:HASH>>，原文暂存本地
+                              │
+                              └─ Agent 需要时用 sift_retrieve 取回
 ```
 
-## 支持的宿主
+以下情况不压缩，原文原样进入上下文：
 
-| 宿主 | npm 包（待发布） | 接入点 | 详细文档 |
-| --- | --- | --- | --- |
-| [Pi](https://github.com/earendil-works/pi) | `@agent-context/pi-sift` | `tool_result` 扩展 | [安装、配置与排障](pi-sift-extension/README.md) |
-| [OpenCode](https://github.com/anomalyco/opencode) | `@agent-context/opencode-sift` | `tool.execute.after` 插件 | [安装、配置与排障](opencode-sift-plugin/README.md) |
+- 工具执行失败，或宿主已截断输出；
+- 内容过短（默认短于 200 字节；核心库对 512 字节以下的内容总是透传）；
+- 图文混合内容，或无法安全提取文本；
+- 工具在排除列表中；
+- 压缩没有实际收益，或内容已含 `<<stash:HASH>>` 标记。
 
-两个适配器设计为独立发布和安装，当前尚未发布到 npm。v1 没有抽取共享 npm 包。
-
-`@agent-context/opencode-sift` 是社区插件，并非 OpenCode 或 Anomaly 官方项目，也未获得其官方背书。
-
-## 快速开始
+## 安装
 
 ### Pi
 
-当前请从本地目录安装。先克隆仓库并安装依赖：
-
 ```bash
-git clone https://github.com/agents-sdk/sift-plugins.git
-cd sift-plugins/pi-sift-extension
-npm install
-pi install /absolute/path/to/sift-plugins/pi-sift-extension
+pi install npm:@agent-context/pi-sift
 ```
 
-发布到 npm 后可使用 `pi install npm:@agent-context/pi-sift`。安装后默认启用，无需额外配置，也可以通过 CLI 调整：
+安装后默认启用。也可以按需调整：
 
 ```bash
 pi --sift-min-length 400 --sift-exclude bash,grep
 pi --no-sift
 ```
 
-Pi 还支持项目级安装、环境变量和本地目录加载，参见 [`@agent-context/pi-sift` 文档](pi-sift-extension/README.md)。
+支持项目级安装（`pi install -l npm:@agent-context/pi-sift`）、环境变量和本地目录安装，详见 [`@agent-context/pi-sift` 文档](pi-sift-extension/README.md)。
 
 ### OpenCode
 
-当前请先在 `opencode-sift-plugin` 目录执行 `npm install`，再把本地入口加入用户级 `~/.config/opencode/opencode.json` 或项目根目录的 `opencode.json`：
+要求 OpenCode `>=1.18.26 <2`。在用户级 `~/.config/opencode/opencode.json` 或项目根目录的 `opencode.json` 中加入：
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    ["file:///absolute/path/to/sift-plugins/opencode-sift-plugin/index.ts", { "minLength": 200 }]
+    ["@agent-context/opencode-sift", { "minLength": 200 }]
   ]
 }
 ```
 
-发布到 npm 后可把入口改为 `@agent-context/opencode-sift`。要求 OpenCode `>=1.18.26 <2`；Bun 原生模块说明和故障排查见 [`@agent-context/opencode-sift` 文档](opencode-sift-plugin/README.md)。
+也可以用 CLI 安装：`opencode plugin @agent-context/opencode-sift`。故障排查见 [`@agent-context/opencode-sift` 文档](opencode-sift-plugin/README.md)。
 
-## 配置概览
+## 配置
 
-两个适配器使用相同的核心配置语义，但配置入口随宿主而异：
+全部可选，两个宿主语义一致：
 
-| 配置 | 默认值 | Pi | OpenCode |
-| --- | --- | --- | --- |
-| 启用压缩 | `true` | `--no-sift` 或 `SIFT_ENABLED=0` | `enabled: false` |
-| 最小输入长度 | `200` 个 UTF-8 字节 | `--sift-min-length` 或 `SIFT_MIN_LENGTH` | `minLength` |
-| 排除工具 | `sift_retrieve` | `--sift-exclude` 或 `SIFT_EXCLUDED_TOOLS` | `excludedTools` |
-
-`minLength` 是适配器侧的廉价预过滤；Sift 核心对小于 512 字节的内容仍会直接透传。`sift_retrieve` 始终在排除列表中，防止恢复出的原文被再次压缩。
-
-## 压缩与取回行为
-
-适配器只处理工具输出中的纯文本，并在以下情况保持原样：
-
-- 工具执行失败，或宿主已标记结果被截断；
-- 内容短于配置的 `minLength`；
-- 工具位于 `excludedTools`；
-- 图文混合内容，或无法安全提取文本；
-- 内容已经包含合法的 `<<stash:24-hex>>` 标记；
-- Sift 未改变内容，或没有实际节省 token。
-
-压缩成功后，适配器会保留宿主已有 metadata/details，并追加 `siftCompressed`、`siftTokensSaved`、`siftLossy` 和可选的 `siftStashKey`。
-
-有损结果会包含类似标记：
-
-```text
-<<stash:0123456789abcdef01234567>>
-```
-
-Agent 在确实需要被省略的细节时，可调用 `sift_retrieve`，传入 24 位 key 或完整标记。取回失败不会抛出异常，而会返回带 `error`、`hint` 和 `stashKey` 的 JSON；内容过期或来自其他 session 时，应重新执行原工具。
-
-## Stash 与数据安全
-
-| 宿主 | 默认位置 | 隔离方式 |
+| 想要 | Pi | OpenCode |
 | --- | --- | --- |
-| Pi | `${PI_CODING_AGENT_DIR:-~/.pi/agent}/sift/{sessionId}/` | Pi session ID |
-| OpenCode | `${XDG_DATA_HOME:-~/.local/share}/opencode/sift/{sessionID}/` | OpenCode session ID |
+| 停用 | `--no-sift` 或 `SIFT_ENABLED=0` | `"enabled": false` |
+| 只压缩更长的输出 | `--sift-min-length 400` 或 `SIFT_MIN_LENGTH` | `"minLength": 400` |
+| 跳过指定工具 | `--sift-exclude bash,grep` 或 `SIFT_EXCLUDED_TOOLS` | `"excludedTools": ["bash", "grep"]` |
 
-- stash 目录使用 `0700` 权限，并明确放在项目工作树之外；
-- 原文以明文保存，请把 stash 当作敏感数据，不要压缩不愿落盘的凭证；
-- 内容 TTL 为 30 分钟，通过启动、session 结束和每 5 分钟定期扫描做惰性清理；
-- session 之间相互隔离，但同一 session 在进程重启后仍可在 TTL 内取回；
-- 适配器无法恢复进入 hook 之前已被宿主截掉的输出，因此这类结果会直接跳过。
+`minLength` 默认 200（UTF-8 字节）。`sift_retrieve` 永远不会被压缩，避免取回的原文被再次压缩。
 
-## 项目结构
+## 数据安全
+
+有损压缩的原文会暂存在本地私有目录：权限 `0700`，30 分钟后自动清理，session 之间相互隔离。
+
+| 宿主 | 暂存位置 |
+| --- | --- |
+| Pi | `${PI_CODING_AGENT_DIR:-~/.pi/agent}/sift/{sessionId}/` |
+| OpenCode | `${XDG_DATA_HOME:-~/.local/share}/opencode/sift/{sessionID}/` |
+
+- 原文以**明文**保存：不要用它压缩你不愿落盘的凭证；
+- 暂存目录始终位于项目工作树之外，不会出现在 `git status` 中；
+- 同一 session 在进程重启后仍可取回；
+- 宿主在压缩前已截断的输出无法恢复，这类结果会直接跳过压缩。
+
+## 常见问题
+
+| 现象 | 说明 |
+| --- | --- |
+| 某个输出没有被压缩 | 多数情况正常，见「装上之后」的跳过条件 |
+| Agent 取回原文失败 | 原文超过 30 分钟 TTL 或来自其他 session；重新执行原工具即可 |
+| 找不到原生模块 | 见对应包文档的故障排查一节 |
+
+`@agent-context/opencode-sift` 是社区插件，并非 OpenCode 或 Anomaly 官方项目，也未获得其官方背书。
+
+## 参与开发
+
+压缩算法、语言支持和 Node.js API 位于 [agents-sdk/sift](https://github.com/agents-sdk/sift)，本仓库只负责宿主接入：
 
 ```text
 sift-plugins/
@@ -135,25 +116,16 @@ sift-plugins/
     └── pi-opencode-plugin-plan.md
 ```
 
-两个包目前各自包含少量宿主无关逻辑，并通过同一组 contract vectors 防止配置、key 校验和取回错误语义发生漂移。
+两个包各自独立发布（v1 未抽取共享包），通过同一组 contract vectors 保持配置、key 校验和取回错误语义一致。宿主接入点等实现决策详见 [`docs/pi-opencode-plugin-plan.md`](docs/pi-opencode-plugin-plan.md)。
 
-## 本地开发
-
-需要支持 `--experimental-strip-types` 的 Node.js（建议 22.6+）。克隆仓库后分别安装依赖并运行测试：
+本地开发需要支持 `--experimental-strip-types` 的 Node.js（建议 22.6+）：
 
 ```bash
-cd pi-sift-extension
-npm install
-npm test
-
-cd ../opencode-sift-plugin
-npm install
-npm test
+cd pi-sift-extension && npm install && npm test
+cd ../opencode-sift-plugin && npm install && npm test
 ```
 
-测试包括共享契约、适配器行为、session stash、包入口以及 `@agent-context/sift` 原生模块冒烟测试。提交前建议两个目录的测试都通过。
-
-实现决策和跨宿主契约详见 [`docs/pi-opencode-plugin-plan.md`](docs/pi-opencode-plugin-plan.md) 与 [`docs/contract-vectors.json`](docs/contract-vectors.json)。
+提交前建议两个目录的测试都通过。
 
 ## 许可证
 

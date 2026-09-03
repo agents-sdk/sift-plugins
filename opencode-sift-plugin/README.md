@@ -1,16 +1,16 @@
 # `@agent-context/opencode-sift`
 
-OpenCode **V1 server 插件**：在 `tool.execute.after` 用 [`@agent-context/sift`](https://www.npmjs.com/package/@agent-context/sift) 压缩工具结果，并注册 `sift_retrieve`。
+OpenCode **插件**：用 [`@agent-context/sift`](https://www.npmjs.com/package/@agent-context/sift) 自动压缩工具结果，并注册 `sift_retrieve` 供模型取回原文。
 
 本插件是社区项目，并非 OpenCode 或 Anomaly 官方项目，也未获得其官方背书。
 
-这不是检索、记忆、MCP、TUI，也不是对整包 provider 请求做 `siftRequest`。
+这不是检索、记忆或 MCP，也不会改写整包模型请求；它只处理工具输出。
 
-要求 OpenCode `>=1.18.26 <2`。发布用的插件类型来自 `@opencode-ai/plugin@1.18.26`。
+要求 OpenCode `>=1.18.26 <2`。
 
 ## 安装
 
-npm 发布后，写入用户 / 全局 `~/.config/opencode/opencode.json`：
+写入用户 / 全局 `~/.config/opencode/opencode.json`：
 
 ```json
 {
@@ -25,7 +25,7 @@ npm 发布后，写入用户 / 全局 `~/.config/opencode/opencode.json`：
 
 CLI：`opencode plugin @agent-context/opencode-sift`（别名 `plug`）。
 
-未发布的本地文件（**不会**自动安装依赖 — 先在本目录执行 `bun install`）：
+本地 `file://` 方式（开发用；**不会**自动安装依赖 — 先在本目录执行 `bun install`）：
 
 ```json
 {
@@ -35,8 +35,6 @@ CLI：`opencode plugin @agent-context/opencode-sift`（别名 `plug`）。
 }
 ```
 
-npm 包同时提供 `main` 和 `exports["./server"]`，OpenCode loader 才能从 tarball 解析入口。不要加 `exports["./tui"]`。
-
 ## 配置（plugin 元组 options）
 
 | 字段 | 类型 | 默认 |
@@ -45,30 +43,25 @@ npm 包同时提供 `main` 和 `exports["./server"]`，OpenCode loader 才能从
 | `minLength` | number | `200`（UTF-8 字节；非法值回退 200） |
 | `excludedTools` | string[] | 始终与 `sift_retrieve` 做并集 |
 
-`enabled: false` 既不注册 hook，也不注册工具。
+`enabled: false` 后既不压缩，也不注册 `sift_retrieve`。
 
-## 行为
+## 压缩规则
 
-OpenCode 的工具输出已经是 `output.output` 上的字符串。after hook **原地修改**该字符串（返回值无效）。
-
-跳过条件：
+以下情况跳过压缩，原文原样保留：
 
 - 工具在排除列表中
-- `metadata.error === true`
-- `metadata.truncated === true`（v1 不对宿主已截断的 bash/read 输出再压）
+- 执行失败，或宿主已截断输出（v1 不再压缩已被 OpenCode 截断的 bash/read 输出）
 - 文本短于 `minLength`
 - 文本已含合法 `<<stash:24-hex>>` 标记
-- `siftText` 报告 `changed === false` 或 `tokensSaved <= 0`
+- 压缩没有收益
 
-已有 `metadata` 字段会保留。成功时插件追加 `siftCompressed`、`siftTokensSaved`、`siftLossy`，以及可选的 `siftStashKey`。
-
-`read` 的路径字段是 `filePath`（不是 Pi 的 `path`）。仅对完整、未偏移、未截断的 read 传入 `sourcePath`。
+已有 `metadata` 字段会保留，成功时追加 `siftCompressed`、`siftTokensSaved`、`siftLossy` 和可选的 `siftStashKey`。
 
 ## `sift_retrieve`
 
-与 Pi 扩展同一契约：参数 `stashKey`，成功返回纯文本，失败返回 JSON `{ error, hint, stashKey }`。使用 `context.sessionID` 做 get-or-create，重启 OpenCode 进程后仍可取回。
+与 Pi 扩展同一契约：参数 `stashKey`，成功返回纯文本，失败返回 JSON `{ error, hint, stashKey }`。按 OpenCode sessionID 隔离，重启进程后仍可取回。
 
-非法 key（长度不对、非十六进制、路径穿越）不会到达 native `retrieve`。
+非法 key（长度不对、非十六进制、路径穿越）会被直接拒绝。
 
 stash TTL（1800 秒）过期后，重跑原工具。不要对 retrieve 死循环。
 
@@ -80,11 +73,11 @@ stash TTL（1800 秒）过期后，重跑原工具。不要对 retrieve 死循�
 | 隔离 | 按 OpenCode `sessionID` |
 | 权限 | `0700` |
 | Git | 绝不会写到 `worktree/.opencode/.sift` |
-| 清理 | 启动、`session.deleted`、插件 `dispose`、每 5 分钟 purge |
+| 清理 | TTL 1800 秒；过期内容在启动、会话删除和定期扫描时清理 |
 
 原文以**明文**落盘。把 stash 目录当作敏感数据。
 
-OpenCode 的 bash 工具在 `tool.execute.after` 之前已经截断。v1 跳过 `metadata.truncated === true`，因此 retrieve 无法恢复宿主已经丢掉的字节。
+OpenCode 自身截断过的输出（如超长 bash 输出）不会被恢复：这类结果会直接跳过压缩，`sift_retrieve` 也无法还原被宿主丢掉的字节。
 
 ## Bun / 原生模块
 
@@ -99,7 +92,7 @@ OpenCode 的 bash 工具在 `tool.execute.after` 之前已经截断。v1 跳过 
 
 | 现象 | 检查 |
 | --- | --- |
-| 插件未加载 | `exports["./server"]` / `main`；用 npm tarball，不要额外乱 export |
+| 插件未加载 | 检查 `opencode.json` 语法与 OpenCode 版本（`>=1.18.26 <2`）；本地 `file://` 方式需先 `bun install` |
 | 本地 file 插件找不到 sift | 在本目录 `bun install` |
-| 没有压缩 | `minLength` 过大；truncated/error metadata；输出过短 |
+| 没有压缩 | `minLength` 过大；执行失败或已被宿主截断；输出过短 |
 | `git status` 出现 `.sift` | 不应发生；stash 在 XDG data 下，不在 worktree |

@@ -362,7 +362,7 @@ opencode-sift-plugin/
 }
 ```
 
-未发布：
+本地 `file://`（开发用）：
 
 ```json
 {
@@ -470,7 +470,7 @@ cd opencode-sift-plugin && npm test   # 15 pass
 
 | 宿主 | 包名 | 安装 |
 | --- | --- | --- |
-| Pi | `@agent-context/pi-sift` | `pi install npm:@agent-context/pi-sift`（未发布时用本地路径 / `pi -e`） |
+| Pi | `@agent-context/pi-sift` | `pi install npm:@agent-context/pi-sift`（开发时可用本地路径 / `pi -e`） |
 | OpenCode | `@agent-context/opencode-sift` | `opencode.json` 的 `plugin` 数组 |
 
 子包 README（中文）含：配置、stash 目录、TTL、清理、`<<stash:KEY>>`、重启 retrieve、截断语义、原文明文落盘、Bun/Node 原生模块。
