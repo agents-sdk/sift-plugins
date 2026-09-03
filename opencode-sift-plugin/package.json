@@ -1,5 +1,5 @@
 {
-  "name": "@agent-context/sift-opencode",
+  "name": "@agent-context/opencode-sift",
   "version": "0.1.0",
   "description": "OpenCode plugin that compresses tool results with @agent-context/sift",
   "license": "Apache-2.0",

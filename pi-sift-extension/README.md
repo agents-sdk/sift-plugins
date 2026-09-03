@@ -1,4 +1,4 @@
-# `@agent-context/sift-pi`
+# `@agent-context/pi-sift`
 
 Pi coding-agent **扩展**：在工具结果进入模型前用 [`@agent-context/sift`](https://www.npmjs.com/package/@agent-context/sift) 压缩，并注册 `sift_retrieve` 供模型取回原文。
 
@@ -7,11 +7,11 @@ Pi coding-agent **扩展**：在工具结果进入模型前用 [`@agent-context/
 ## 安装
 
 ```bash
-# 已发布
-pi install npm:@agent-context/sift-pi
+# npm 发布后
+pi install npm:@agent-context/pi-sift
 
-# 项目级
-pi install -l npm:@agent-context/sift-pi
+# npm 发布后，项目级
+pi install -l npm:@agent-context/pi-sift
 
 # 未发布的本地目录
 cd pi-sift-extension && npm install

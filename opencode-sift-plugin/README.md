@@ -1,6 +1,8 @@
-# `@agent-context/sift-opencode`
+# `@agent-context/opencode-sift`
 
 OpenCode **V1 server 插件**：在 `tool.execute.after` 用 [`@agent-context/sift`](https://www.npmjs.com/package/@agent-context/sift) 压缩工具结果，并注册 `sift_retrieve`。
+
+本插件是社区项目，并非 OpenCode 或 Anomaly 官方项目，也未获得其官方背书。
 
 这不是检索、记忆、MCP、TUI，也不是对整包 provider 请求做 `siftRequest`。
 
@@ -8,20 +10,20 @@ OpenCode **V1 server 插件**：在 `tool.execute.after` 用 [`@agent-context/si
 
 ## 安装
 
-用户 / 全局 `~/.config/opencode/opencode.json`：
+npm 发布后，写入用户 / 全局 `~/.config/opencode/opencode.json`：
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    ["@agent-context/sift-opencode", { "minLength": 200 }]
+    ["@agent-context/opencode-sift", { "minLength": 200 }]
   ]
 }
 ```
 
 项目级：在项目根 `opencode.json` 写同样的 `plugin` 数组。
 
-CLI：`opencode plugin @agent-context/sift-opencode`（别名 `plug`）。
+CLI：`opencode plugin @agent-context/opencode-sift`（别名 `plug`）。
 
 未发布的本地文件（**不会**自动安装依赖 — 先在本目录执行 `bun install`）：
 

@@ -19,7 +19,7 @@
 | --- | --- |
 | 插件放哪 | 全部放本仓 `sift-plugins`，不写进 `sift` / `pi` / `opencode` 上游 |
 | 仓内布局 | 平铺独立可发布包，v1 **不抽** shared npm 包 |
-| npm 包名 | `@agent-context/sift-pi`、`@agent-context/sift-opencode` |
+| npm 包名 | `@agent-context/pi-sift`、`@agent-context/opencode-sift` |
 | 压缩时机 | 工具结果进模型前做 `siftText`；**不用** `siftRequest` 改整包 LLM 请求 |
 | 取回 | 只提供全文 `sift_retrieve`；v1 **不做** `retrieveLines` |
 | Stash | 按 session 隔离；**不写进项目工作树** |
@@ -63,8 +63,8 @@ sift-plugins/
   docs/
     pi-opencode-plugin-plan.md         # 本文件（落地记录）
     contract-vectors.json              # 跨包契约测试向量
-  pi-sift-extension/                   # @agent-context/sift-pi
-  opencode-sift-plugin/                # @agent-context/sift-opencode
+  pi-sift-extension/                   # @agent-context/pi-sift
+  opencode-sift-plugin/                # @agent-context/opencode-sift
 ```
 
 不放进：
@@ -198,7 +198,7 @@ session id 经 `encodeSessionId` 处理：拒绝空 / `.` / `..`，非 `[A-Za-z0
 
 ---
 
-## 5. Pi 插件：`@agent-context/sift-pi`
+## 5. Pi 插件：`@agent-context/pi-sift`
 
 ### 5.1 机制
 
@@ -227,7 +227,7 @@ pi-sift-extension/
 
 ```json
 {
-  "name": "@agent-context/sift-pi",
+  "name": "@agent-context/pi-sift",
   "version": "0.1.0",
   "license": "Apache-2.0",
   "type": "module",
@@ -291,13 +291,13 @@ cd pi-sift-extension && npm install
 pi -e ./index.ts
 pi install /absolute/path/to/sift-plugins/pi-sift-extension
 # 发布后：
-pi install npm:@agent-context/sift-pi
-pi install -l npm:@agent-context/sift-pi
+pi install npm:@agent-context/pi-sift
+pi install -l npm:@agent-context/pi-sift
 ```
 
 ---
 
-## 6. OpenCode 插件：`@agent-context/sift-opencode`
+## 6. OpenCode 插件：`@agent-context/opencode-sift`
 
 ### 6.1 机制
 
@@ -305,7 +305,7 @@ pi install -l npm:@agent-context/sift-pi
 - `export default { id: "sift", server }`，无 `./tui`，无额外函数 export（避免 legacy `Object.values` 误扫）
 - `"tool.execute.after"` **mutate** `output.output`
 - `tool()` + Zod；`execute` 用 `context.sessionID`
-- 配置：`opencode.json` 元组 `["@agent-context/sift-opencode", { minLength: 200 }]`
+- 配置：`opencode.json` 元组 `["@agent-context/opencode-sift", { minLength: 200 }]`
 
 ### 6.2 目录（落地）
 
@@ -328,7 +328,7 @@ opencode-sift-plugin/
 
 ```json
 {
-  "name": "@agent-context/sift-opencode",
+  "name": "@agent-context/opencode-sift",
   "version": "0.1.0",
   "license": "Apache-2.0",
   "type": "module",
@@ -358,7 +358,7 @@ opencode-sift-plugin/
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": [["@agent-context/sift-opencode", { "minLength": 200 }]]
+  "plugin": [["@agent-context/opencode-sift", { "minLength": 200 }]]
 }
 ```
 
@@ -370,7 +370,7 @@ opencode-sift-plugin/
 }
 ```
 
-本地 `file://` 不会自动装依赖，需先在包目录 `bun install`。CLI：`opencode plugin @agent-context/sift-opencode`（需宿主 `>=1.18.26`）。
+本地 `file://` 不会自动装依赖，需先在包目录 `bun install`。CLI：`opencode plugin @agent-context/opencode-sift`（需宿主 `>=1.18.26`）。
 
 ---
 
@@ -470,8 +470,8 @@ cd opencode-sift-plugin && npm test   # 15 pass
 
 | 宿主 | 包名 | 安装 |
 | --- | --- | --- |
-| Pi | `@agent-context/sift-pi` | `pi install npm:@agent-context/sift-pi`（未发布时用本地路径 / `pi -e`） |
-| OpenCode | `@agent-context/sift-opencode` | `opencode.json` 的 `plugin` 数组 |
+| Pi | `@agent-context/pi-sift` | `pi install npm:@agent-context/pi-sift`（未发布时用本地路径 / `pi -e`） |
+| OpenCode | `@agent-context/opencode-sift` | `opencode.json` 的 `plugin` 数组 |
 
 子包 README（中文）含：配置、stash 目录、TTL、清理、`<<stash:KEY>>`、重启 retrieve、截断语义、原文明文落盘、Bun/Node 原生模块。
 
