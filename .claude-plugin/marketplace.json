@@ -1,0 +1,23 @@
+{
+	"name": "agent-context",
+	"description": "Context-compression plugins for coding agents, powered by @agent-context/sift",
+	"owner": {
+		"name": "agents-sdk",
+		"url": "https://github.com/agents-sdk"
+	},
+	"plugins": [
+		{
+			"name": "claude-code-sift",
+			"source": "./claude-code-sift-plugin",
+			"description": "Compresses large tool outputs with @agent-context/sift and adds the sift_retrieve tool",
+			"author": {
+				"name": "agents-sdk",
+				"url": "https://github.com/agents-sdk"
+			},
+			"homepage": "https://github.com/agents-sdk/sift-plugins/tree/main/claude-code-sift-plugin",
+			"repository": "https://github.com/agents-sdk/sift-plugins",
+			"license": "Apache-2.0",
+			"keywords": ["sift", "context-compression", "compression"]
+		}
+	]
+}

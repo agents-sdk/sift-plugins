@@ -1,0 +1,36 @@
+{
+	"name": "@agent-context/claude-code-sift",
+	"version": "0.0.1",
+	"description": "Claude Code plugin that compresses tool results with @agent-context/sift",
+	"license": "Apache-2.0",
+	"type": "module",
+	"keywords": [
+		"claude-code",
+		"claude-code-plugin",
+		"sift",
+		"context-compression"
+	],
+	"files": [
+		".claude-plugin",
+		"hooks",
+		".mcp.json",
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"typecheck": "tsc -p tsconfig.test.json",
+		"test": "node --test --experimental-strip-types test/*.test.ts"
+	},
+	"dependencies": {
+		"@agent-context/sift": "0.0.1-alpha.7"
+	},
+	"devDependencies": {
+		"@types/node": "^22.15.0",
+		"typescript": "^5.8.0"
+	},
+	"engines": {
+		"node": ">=18"
+	}
+}
