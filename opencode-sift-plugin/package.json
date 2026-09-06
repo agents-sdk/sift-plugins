@@ -1,6 +1,6 @@
 {
   "name": "@agent-context/opencode-sift",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "OpenCode plugin that compresses tool results with @agent-context/sift",
   "license": "Apache-2.0",
   "type": "module",
@@ -25,7 +25,7 @@
     "test": "node --test --experimental-strip-types test/*.test.ts"
   },
   "dependencies": {
-    "@agent-context/sift": "0.0.1-alpha.7",
+    "@agent-context/sift": "0.0.1",
     "@opencode-ai/plugin": "1.18.26"
   },
   "devDependencies": {

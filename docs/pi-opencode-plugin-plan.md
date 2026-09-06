@@ -2,7 +2,7 @@
 
 状态：v1 已落地（未 npm publish）  
 仓库：`/Users/mac/go/src/sift-plugins`（`github.com/agents-sdk/sift-plugins`）  
-依赖库：`@agent-context/sift@0.0.1-alpha.7`（源码 `/Users/mac/go/src/sift`）  
+依赖库：`@agent-context/sift@0.0.1`（源码 `/Users/mac/go/src/sift`）
 宿主源码：Pi `/Users/mac/go/src/pi`，OpenCode `/Users/mac/go/src/opencode`
 
 本期兼容基线：
@@ -240,7 +240,7 @@ pi-sift-extension/
     "@earendil-works/pi-ai": "*",
     "typebox": "*"
   },
-  "dependencies": { "@agent-context/sift": "0.0.1-alpha.7" }
+  "dependencies": { "@agent-context/sift": "0.0.1" }
 }
 ```
 
@@ -337,7 +337,7 @@ opencode-sift-plugin/
   "files": ["index.ts", "lib", "README.md", "LICENSE"],
   "dependencies": {
     "@opencode-ai/plugin": "1.18.26",
-    "@agent-context/sift": "0.0.1-alpha.7"
+    "@agent-context/sift": "0.0.1"
   },
   "engines": { "opencode": ">=1.18.26 <2" }
 }
@@ -413,7 +413,7 @@ opencode-sift-plugin/
 
 ### 阶段 0 — 冒烟
 
-已用 `@agent-context/sift@0.0.1-alpha.7` 的 npm tarball 在干净目录验证 Node 与 Bun 的 `createSift`。
+已用 `@agent-context/sift@0.0.1` 的 npm tarball 在干净目录验证 Node 与 Bun 的 `createSift`。
 
 ### 阶段 1 — Pi
 

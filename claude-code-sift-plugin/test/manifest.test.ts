@@ -15,7 +15,7 @@ describe("claude code plugin manifest", () => {
 		const plugin = readJson(".claude-plugin/plugin.json");
 		assert.equal(plugin.name, "claude-code-sift");
 		assert.match(String(plugin.name), /^[a-z0-9-]+$/);
-		assert.equal(plugin.version, "0.0.1");
+		assert.equal(plugin.version, "0.0.2");
 		assert.equal(plugin.license, "Apache-2.0");
 		assert.ok(typeof plugin.description === "string" && plugin.description);
 	});
@@ -68,7 +68,7 @@ describe("claude code plugin manifest", () => {
 	it("publishes as the host-prefixed scoped npm package", () => {
 		const pkg = readJson("package.json");
 		assert.equal(pkg.name, "@agent-context/claude-code-sift");
-		assert.equal(pkg.version, "0.0.1");
+		assert.equal(pkg.version, "0.0.2");
 		assert.equal(pkg.type, "module");
 		assert.deepEqual(pkg.files, [
 			".claude-plugin",
@@ -79,7 +79,7 @@ describe("claude code plugin manifest", () => {
 			"LICENSE",
 		]);
 		assert.deepEqual(pkg.dependencies, {
-			"@agent-context/sift": "0.0.1-alpha.7",
+			"@agent-context/sift": "0.0.1",
 		});
 		assert.ok(
 			Array.isArray(pkg.keywords) &&

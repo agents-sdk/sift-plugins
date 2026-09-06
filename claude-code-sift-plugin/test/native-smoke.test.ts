@@ -6,13 +6,22 @@ import { createScanningSift } from "../src/mcp/server.ts";
 import { retrieveFromSift } from "../src/lib/retrieve.ts";
 import { cleanup, tempDir } from "./helpers.ts";
 
-function compressibleJson(): string {
-	const rows = Array.from({ length: 200 }, (_, i) => ({
-		id: i,
-		title: `Issue #${i}: ${i % 17 === 0 ? "panic in worker pool" : "minor typo in docs"}`,
-		state: i % 50 === 0 ? "open" : "closed",
-		labels: ["bug", "docs"],
-	}));
+function lossyJson(): string {
+	const rows = Array.from({ length: 80 }, (_, i) =>
+		i % 2 === 0
+			? {
+				type: "user",
+				id: i,
+				display_name: `user-${i}`,
+				email_address: `user-${i}@example.com`,
+			}
+			: {
+				type: "order",
+				id: i,
+				currency_code: "USD",
+				total_amount_cents: i * 100,
+			},
+	);
 	return JSON.stringify(rows);
 }
 
@@ -20,7 +29,7 @@ describe("native sift instance (claude code)", () => {
 	it("round-trips a stashed payload from a new instance on the same dir", () => {
 		const root = tempDir("sift-cc-native-");
 		try {
-			const original = compressibleJson();
+			const original = lossyJson();
 			const first = createSift({ stashDir: root });
 			const result = first.siftText(
 				original,
@@ -40,7 +49,7 @@ describe("native sift instance (claude code)", () => {
 	it("scanning view retrieves across session dirs like the MCP server", () => {
 		const root = tempDir("sift-cc-scan-");
 		try {
-			const original = compressibleJson();
+			const original = lossyJson();
 			// Two sessions stashed content; the MCP server has no session id and
 			// must find the key regardless of which session wrote it.
 			mkdirSync(`${root}/sess-older`);

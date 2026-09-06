@@ -1,6 +1,6 @@
 {
 	"name": "claude-code-sift",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Compresses large tool outputs with @agent-context/sift and adds the sift_retrieve tool",
 	"author": {
 		"name": "agents-sdk",
