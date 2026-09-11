@@ -32,6 +32,22 @@ describe("opencode package entry", () => {
 		assert.doesNotMatch(source, /\bserver\s*[:,]/);
 	});
 
+	it("keeps UI runtime peers optional so OpenCode supplies one renderer", () => {
+		const pkgPath = join(
+			dirname(fileURLToPath(import.meta.url)),
+			"..",
+			"package.json",
+		);
+		const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as {
+			dependencies?: Record<string, string>;
+			peerDependenciesMeta?: Record<string, { optional?: boolean }>;
+		};
+		for (const name of ["@opentui/core", "@opentui/solid", "solid-js"]) {
+			assert.equal(pkg.dependencies?.[name], undefined);
+			assert.equal(pkg.peerDependenciesMeta?.[name]?.optional, true);
+		}
+	});
+
 	it("default-exports { id, server } and no extra plugin functions", async () => {
 		const mod = await import("../index.ts");
 		assert.equal(mod.default.id, "sift");
