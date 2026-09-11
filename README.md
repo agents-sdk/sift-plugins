@@ -17,6 +17,7 @@
 - 安装即启用，无需配置，对 Agent 透明：它看到的是等价或摘要后的内容，行为不变；
 - 不适合压缩的内容原样保留（条件见下）；
 - 工具输出占用的 token 明显减少。
+- OpenCode TUI 会在 prompt 右侧显示当前会话累计节省的 token 数。
 
 ```text
 工具输出（源码、日志、JSON、diff、搜索结果…）
@@ -55,7 +56,13 @@ pi --no-sift
 
 ### OpenCode
 
-要求 OpenCode `>=1.18.26 <2`。在用户级 `~/.config/opencode/opencode.json` 或项目根目录的 `opencode.json` 中加入：
+要求 OpenCode `>=1.18.26 <2`。推荐用 CLI 安装；它会同时注册压缩所需的 server 入口和显示 token 统计的 TUI 入口：
+
+```bash
+opencode plugin @agent-context/opencode-sift
+```
+
+手动安装 server 入口时，在用户级 `~/.config/opencode/opencode.json` 或项目根目录的 `opencode.json` 中加入：
 
 ```json
 {
@@ -66,7 +73,16 @@ pi --no-sift
 }
 ```
 
-也可以用 CLI 安装：`opencode plugin @agent-context/opencode-sift`。故障排查见 [`@agent-context/opencode-sift` 文档](opencode-sift-plugin/README.md)。
+TUI 入口还需写入 `~/.config/opencode/tui.json`（项目级为 `.opencode/tui.json`）：
+
+```json
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": ["@agent-context/opencode-sift"]
+}
+```
+
+完整配置和故障排查见 [`@agent-context/opencode-sift` 文档](opencode-sift-plugin/README.md)。
 
 ### Claude Code
 

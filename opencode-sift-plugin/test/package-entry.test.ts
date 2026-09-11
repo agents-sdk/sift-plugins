@@ -17,7 +17,19 @@ describe("opencode package entry", () => {
 		};
 		assert.equal(pkg.main, "./index.ts");
 		assert.equal(pkg.exports?.["./server"], "./index.ts");
-		assert.equal(pkg.exports?.["./tui"], undefined);
+		assert.equal(pkg.exports?.["./tui"], "./tui.tsx");
+	});
+
+	it("exposes a separate target-only TUI module", () => {
+		const tuiPath = join(
+			dirname(fileURLToPath(import.meta.url)),
+			"..",
+			"tui.tsx",
+		);
+		const source = readFileSync(tuiPath, "utf8");
+		assert.match(source, /id: PLUGIN_ID/);
+		assert.match(source, /\btui,/);
+		assert.doesNotMatch(source, /\bserver\s*[:,]/);
 	});
 
 	it("default-exports { id, server } and no extra plugin functions", async () => {

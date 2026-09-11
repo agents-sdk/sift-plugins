@@ -1,6 +1,6 @@
 # `@agent-context/opencode-sift`
 
-OpenCode **插件**：用 [`@agent-context/sift`](https://www.npmjs.com/package/@agent-context/sift) 自动压缩工具结果，并注册 `sift_retrieve` 供模型取回原文。
+OpenCode **插件**：用 [`@agent-context/sift`](https://www.npmjs.com/package/@agent-context/sift) 自动压缩工具结果，并注册 `sift_retrieve` 供模型取回原文。TUI 会在当前会话的 prompt 右侧显示累计节省的 token 数。
 
 本插件是社区项目，并非 OpenCode 或 Anomaly 官方项目，也未获得其官方背书。
 
@@ -10,7 +10,13 @@ OpenCode **插件**：用 [`@agent-context/sift`](https://www.npmjs.com/package/
 
 ## 安装
 
-写入用户 / 全局 `~/.config/opencode/opencode.json`：
+推荐使用 CLI 安装，它会识别并注册包里的 server 和 TUI 两个入口：
+
+```bash
+opencode plugin @agent-context/opencode-sift
+```
+
+手动安装时，把 server 入口写入用户 / 全局 `~/.config/opencode/opencode.json`：
 
 ```json
 {
@@ -21,9 +27,16 @@ OpenCode **插件**：用 [`@agent-context/sift`](https://www.npmjs.com/package/
 }
 ```
 
-项目级：在项目根 `opencode.json` 写同样的 `plugin` 数组。
+并把 TUI 入口写入 `~/.config/opencode/tui.json`，这样 prompt 右侧才会显示 token 统计：
 
-CLI：`opencode plugin @agent-context/opencode-sift`（别名 `plug`）。
+```json
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": ["@agent-context/opencode-sift"]
+}
+```
+
+项目级 server 配置放在项目根 `opencode.json`，TUI 配置放在 `.opencode/tui.json`。CLI 命令的别名是 `opencode plug`。
 
 ## 配置（plugin 元组 options）
 
@@ -34,6 +47,12 @@ CLI：`opencode plugin @agent-context/opencode-sift`（别名 `plug`）。
 | `excludedTools` | string[] | 始终与 `sift_retrieve` 做并集 |
 
 `enabled: false` 后既不压缩，也不注册 `sift_retrieve`。
+
+## TUI token 统计
+
+包的 `./tui` entrypoint 会注册到可叠加的 `session_prompt_right` slot。显示格式为 `Sift saved 1.2k tokens`。
+
+统计值来自当前会话已完成工具结果里的 `siftTokensSaved` metadata，因此会随工具结果实时更新，也能在重新打开会话时从历史消息恢复；未被 Sift 压缩的工具结果不会计入。
 
 ## 压缩规则
 
