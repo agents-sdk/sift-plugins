@@ -17,7 +17,7 @@
 - 安装即启用，无需配置，对 Agent 透明：它看到的是等价或摘要后的内容，行为不变；
 - 不适合压缩的内容原样保留（条件见下）；
 - 工具输出占用的 token 明显减少。
-- OpenCode TUI 会在 prompt 右侧显示当前会话累计节省的 token 数。
+- OpenCode TUI 会在右侧栏的 Context 下方显示当前会话及其 subagent 累计节省的 token 数。
 
 ```text
 工具输出（源码、日志、JSON、diff、搜索结果…）

@@ -1,6 +1,6 @@
 # `@agent-context/opencode-sift`
 
-OpenCode **插件**：用 [`@agent-context/sift`](https://www.npmjs.com/package/@agent-context/sift) 自动压缩工具结果，并注册 `sift_retrieve` 供模型取回原文。TUI 会在当前会话的 prompt 右侧显示累计节省的 token 数。
+OpenCode **插件**：用 [`@agent-context/sift`](https://www.npmjs.com/package/@agent-context/sift) 自动压缩工具结果，并注册 `sift_retrieve` 供模型取回原文。TUI 会在右侧栏的 Context 下方显示累计节省的 token 数。
 
 本插件是社区项目，并非 OpenCode 或 Anomaly 官方项目，也未获得其官方背书。
 
@@ -27,7 +27,7 @@ opencode plugin @agent-context/opencode-sift
 }
 ```
 
-并把 TUI 入口写入 `~/.config/opencode/tui.json`，这样 prompt 右侧才会显示 token 统计：
+并把 TUI 入口写入 `~/.config/opencode/tui.json`，这样右侧栏才会显示 token 统计：
 
 ```json
 {
@@ -50,9 +50,9 @@ opencode plugin @agent-context/opencode-sift
 
 ## TUI token 统计
 
-包的 `./tui` entrypoint 会注册到可叠加的 `session_prompt_right` slot。显示格式为 `Sift saved 1.2k tokens`。
+包的 `./tui` entrypoint 会注册到可叠加的 `sidebar_content` slot，并排在内置 Context 与 MCP 区块之间。显示格式为 `Sift` / `1.2k tokens saved`。
 
-统计值来自当前会话已完成工具结果里的 `siftTokensSaved` metadata，因此会随工具结果实时更新，也能在重新打开会话时从历史消息恢复；未被 Sift 压缩的工具结果不会计入。
+统计值来自当前会话及其 subagent 子会话已完成工具结果里的 `siftTokensSaved` metadata，因此会随工具结果实时更新，也能在重新打开会话时从历史消息恢复；未被 Sift 压缩的工具结果不会计入。
 
 ## 压缩规则
 
