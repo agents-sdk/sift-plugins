@@ -1,6 +1,6 @@
 # Pi / OpenCode Sift 插件实施计划
 
-状态：v1 已落地（未 npm publish）  
+状态：v1 已落地并发布；OpenCode `0.0.7` 修复已完成，待发布
 仓库：`/Users/mac/go/src/sift-plugins`（`github.com/agents-sdk/sift-plugins`）  
 依赖库：`@agent-context/sift@0.0.1`（源码 `/Users/mac/go/src/sift`）
 宿主源码：Pi `/Users/mac/go/src/pi`，OpenCode `/Users/mac/go/src/opencode`
@@ -9,7 +9,7 @@
 
 - Pi CLI `0.84.4`（源码 `b8b873b98`）
 - OpenCode 插件 API `@opencode-ai/plugin@1.18.26` / 源码 `82b665075b`
-- 本机安装的 OpenCode CLI 仍是 `1.15.4`，**不代替** 1.18 loader 的宿主安装验证
+- OpenCode CLI `1.18.30` 已完成真实插件安装和 TUI 验证
 
 ---
 
@@ -24,7 +24,7 @@
 | 取回 | 只提供全文 `sift_retrieve`；v1 **不做** `retrieveLines` |
 | Stash | 按 session 隔离；**不写进项目工作树** |
 | 许可证 | Apache-2.0，与 Sift 核心一致 |
-| 发布入口 | OpenCode 包同时提供 `exports["./server"]` 和 `main`；已用真实 npm tarball 验证 |
+| 发布入口 | OpenCode 包同时提供 `exports["./server"]`、`exports["./tui"]` 和 `main`；已用真实 npm tarball 验证 |
 | 取回实例 | Pi / OpenCode 按当前 session **get-or-create**，不依赖本进程曾经压缩过 |
 | key 校验 | 只接受 24 位十六进制 key 或完整合法 marker |
 
@@ -97,6 +97,7 @@ v1 不建 `packages/shared`、不用 npm workspaces。两包各自复制一份�
 10. 根 `README.md`：Pi / OpenCode 一句话安装
 11. **stash 清理**：启动 / session 结束 / 每 5 分钟 purge 过期文件（TTL 1800s）
 12. **session id 安全编码**：非法字符 hex 编码；OpenCode 断言 stash 不在 worktree 下；目录权限 `0700`
+13. **OpenCode TUI 统计**：右侧栏显示当前会话及 subagent 子会话累计节省的 token，并从历史消息恢复
 
 ### 3.2 v1 明确不做
 
@@ -105,16 +106,15 @@ v1 不建 `packages/shared`、不用 npm workspaces。两包各自复制一份�
 - `siftRequest` 拦截整包 provider 请求
 - stash 写进项目目录
 - 检索 / 记忆 / 知识图谱
-- OpenCode TUI 插件、Pi 自定义 message renderer
+- Pi 自定义 message renderer
 - 与 session compact 的深度配合
-- npm publish / 官网 / demo
+- 官网 / demo
 
 ### 3.3 后续
 
 - `retrieveLines`
 - Pi `/sift` 状态命令；OpenCode skill 说明
 - 抽 shared 包，再接 Claude Code / Codex 等
-- 用 OpenCode `>=1.18.26` 做一次真实 `opencode plugin` 安装
 - 完整交互式 LLM 会话手工验收（压缩出现在会话历史、模型主动 retrieve）
 
 ---
@@ -302,7 +302,8 @@ pi install -l npm:@agent-context/pi-sift
 ### 6.1 机制
 
 - V1 Hooks，不用 V2 Effect
-- `export default { id: "sift", server }`，无 `./tui`，无额外函数 export（避免 legacy `Object.values` 误扫）
+- server 入口导出 `{ id: "sift", server }`，TUI 入口导出 `tui(api)`
+- TUI 通过 `sidebar_content` slot 注入统计，并直接更新 OpenTUI renderable 以兼容第三方插件运行时
 - `"tool.execute.after"` **mutate** `output.output`
 - `tool()` + Zod；`execute` 用 `context.sessionID`
 - 配置：`opencode.json` 元组 `["@agent-context/opencode-sift", { minLength: 200 }]`
@@ -318,6 +319,7 @@ opencode-sift-plugin/
   LICENSE
   tsconfig.json
   index.ts                  # V1 { id, server }
+  tui.tsx                   # TUI sidebar_content 统计
   lib/after.ts
   lib/retrieve-tool.ts
   lib/{config,keys,hints,content,compress,retrieve,session-store}.ts
@@ -329,15 +331,18 @@ opencode-sift-plugin/
 ```json
 {
   "name": "@agent-context/opencode-sift",
-  "version": "0.1.0",
+  "version": "0.0.7",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./index.ts",
-  "exports": { ".": "./index.ts", "./server": "./index.ts" },
-  "files": ["index.ts", "lib", "README.md", "LICENSE"],
+  "exports": { ".": "./index.ts", "./server": "./index.ts", "./tui": "./tui.tsx" },
+  "files": ["index.ts", "tui.tsx", "lib", "README.md", "LICENSE"],
   "dependencies": {
     "@opencode-ai/plugin": "1.18.26",
-    "@agent-context/sift": "0.0.1"
+    "@agent-context/sift": "0.0.1",
+    "@opentui/core": "0.4.5",
+    "@opentui/solid": "0.4.5",
+    "solid-js": "1.9.12"
   },
   "engines": { "opencode": ">=1.18.26 <2" }
 }
@@ -355,10 +360,27 @@ opencode-sift-plugin/
 
 ### 6.5 安装
 
+推荐使用 CLI。它会同时注册 server 和 TUI，无需手动编辑配置文件：
+
+```bash
+opencode plugin @agent-context/opencode-sift
+```
+
+安装后重启 OpenCode TUI。无法使用 CLI 时，再手动将 server 入口写入 `opencode.json`：
+
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [["@agent-context/opencode-sift", { "minLength": 200 }]]
+}
+```
+
+并将 TUI 入口写入 `~/.config/opencode/tui.json`（项目级为 `.opencode/tui.json`）：
+
+```json
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "plugin": ["@agent-context/opencode-sift"]
 }
 ```
 
@@ -370,7 +392,7 @@ opencode-sift-plugin/
 }
 ```
 
-本地 `file://` 不会自动装依赖，需先在包目录 `bun install`。CLI：`opencode plugin @agent-context/opencode-sift`（需宿主 `>=1.18.26`）。
+本地 `file://` 不会自动装依赖，需先在包目录 `bun install`。需宿主 `>=1.18.26`。
 
 ---
 
@@ -421,17 +443,17 @@ opencode-sift-plugin/
 
 ### 阶段 2 — OpenCode
 
-`opencode-sift-plugin/` 已实现。tarball 入口与工厂/after-hook 测试通过。本机 OpenCode CLI `1.15.4`，**未**执行 `opencode plugin` 装到 1.18 宿主。
+`opencode-sift-plugin/` 已实现。tarball 入口与工厂/after-hook 测试通过，并已在 OpenCode CLI `1.18.30` 上执行真实安装及 TUI 验证。`0.0.7` 修复第三方 TUI 插件环境中统计始终为 0 的问题。
 
 ### 阶段 3 — 仓级收尾
 
-根 README、两包中文 README、契约向量、本计划已按代码回写。npm **未 publish**。
+根 README、两包中文 README、契约向量、本计划已按代码回写。npm 包已发布；OpenCode `0.0.7` 待本次提交后发布。
 
 ### 测试
 
 ```bash
 cd pi-sift-extension && npm test      # 39 pass
-cd opencode-sift-plugin && npm test   # 15 pass
+cd opencode-sift-plugin && npm test   # 20 pass
 ```
 
 分层：
@@ -462,7 +484,7 @@ cd opencode-sift-plugin && npm test   # 15 pass
 | Pi 额外 | `promptSnippet` | 工厂测试断言已注册 |
 | OpenCode 额外 | 极大 `minLength` 不压缩 | adapter 测试已覆盖 |
 | 缺口 | 完整交互式 LLM 会话 | 未做 |
-| 缺口 | `opencode plugin` 装进 1.18 宿主 | 未做（本机 CLI 1.15.4） |
+| OpenCode 额外 | TUI token 统计 | OpenCode 1.18.30 实机验证显示 `5.8k tokens saved`（精确值 5,786） |
 
 ---
 
@@ -471,7 +493,7 @@ cd opencode-sift-plugin && npm test   # 15 pass
 | 宿主 | 包名 | 安装 |
 | --- | --- | --- |
 | Pi | `@agent-context/pi-sift` | `pi install npm:@agent-context/pi-sift`（开发时可用本地路径 / `pi -e`） |
-| OpenCode | `@agent-context/opencode-sift` | `opencode.json` 的 `plugin` 数组 |
+| OpenCode | `@agent-context/opencode-sift` | `opencode plugin @agent-context/opencode-sift`（推荐；自动注册 server 与 TUI） |
 
 子包 README（中文）含：配置、stash 目录、TTL、清理、`<<stash:KEY>>`、重启 retrieve、截断语义、原文明文落盘、Bun/Node 原生模块。
 
@@ -512,7 +534,7 @@ cd opencode-sift-plugin && npm test   # 15 pass
 - [x] `pi-sift-extension/` 可被 `pi -e` 加载
 - [x] Pi §10 自动化覆盖；未做完整交互式 LLM 会话
 - [x] OpenCode 工厂与 after-hook 测试通过
-- [x] 真实 npm tarball 含 `./server` 与 `main`
+- [x] 真实 npm tarball 含 `./server`、`./tui` 与 `main`
 - [x] 同 stash 目录新实例可 retrieve
 - [x] Pi stash 不跟随 `sessionDir`
 - [x] `read(offset/limit)`、宿主截断、混合 image + text 有回归
@@ -520,5 +542,5 @@ cd opencode-sift-plugin && npm test   # 15 pass
 - [x] 两包 README + 根 README（中文）
 - [x] stash 未写入仓库 git 树
 - [x] 内部适配器目录已 gitignore，公开文档无其引用
-- [ ] npm publish（需另行授权）
-- [ ] OpenCode `>=1.18.26` 上执行 `opencode plugin` 安装
+- [x] npm 包已发布（OpenCode `0.0.7` 待发布）
+- [x] OpenCode `1.18.30` 上执行 `opencode plugin` 安装并验证 TUI

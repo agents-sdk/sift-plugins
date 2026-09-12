@@ -30,9 +30,12 @@ describe("opencode package entry", () => {
 		assert.match(source, /id: PLUGIN_ID/);
 		assert.match(source, /\btui,/);
 		assert.doesNotMatch(source, /\bserver\s*[:,]/);
+		assert.doesNotMatch(source, /from "solid-js/);
+		assert.match(source, /savedText\.content =/);
+		assert.match(source, /ref=\{setSavedText\}/);
 	});
 
-	it("keeps UI runtime peers optional so OpenCode supplies one renderer", () => {
+	it("ships the UI runtimes required to load the TUI entry", () => {
 		const pkgPath = join(
 			dirname(fileURLToPath(import.meta.url)),
 			"..",
@@ -40,12 +43,10 @@ describe("opencode package entry", () => {
 		);
 		const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as {
 			dependencies?: Record<string, string>;
-			peerDependenciesMeta?: Record<string, { optional?: boolean }>;
 		};
-		for (const name of ["@opentui/core", "@opentui/solid", "solid-js"]) {
-			assert.equal(pkg.dependencies?.[name], undefined);
-			assert.equal(pkg.peerDependenciesMeta?.[name]?.optional, true);
-		}
+		assert.equal(pkg.dependencies?.["@opentui/core"], "0.4.5");
+		assert.equal(pkg.dependencies?.["@opentui/solid"], "0.4.5");
+		assert.equal(pkg.dependencies?.["solid-js"], "1.9.12");
 	});
 
 	it("default-exports { id, server } and no extra plugin functions", async () => {

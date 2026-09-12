@@ -56,13 +56,15 @@ pi --no-sift
 
 ### OpenCode
 
-要求 OpenCode `>=1.18.26 <2`。推荐用 CLI 安装；它会同时注册压缩所需的 server 入口和显示 token 统计的 TUI 入口：
+要求 OpenCode `>=1.18.26 <2`。推荐使用下面的 CLI 命令安装；它会自动注册压缩所需的 server 入口和显示 token 统计的 TUI 入口：
 
 ```bash
 opencode plugin @agent-context/opencode-sift
 ```
 
-手动安装 server 入口时，在用户级 `~/.config/opencode/opencode.json` 或项目根目录的 `opencode.json` 中加入：
+安装后重启 OpenCode TUI。只有无法使用 CLI 时，才需要手动配置以下两个入口。
+
+server 入口写入用户级 `~/.config/opencode/opencode.json` 或项目根目录的 `opencode.json`：
 
 ```json
 {

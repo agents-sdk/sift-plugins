@@ -6,7 +6,7 @@ import type {
 	TuiPluginModule,
 	TuiSlotPlugin,
 } from "@opencode-ai/plugin/tui";
-import { createSignal, onCleanup } from "solid-js";
+import type { TextRenderable } from "@opentui/core";
 import {
 	formatTokenCount,
 	SessionSavingsCounter,
@@ -17,10 +17,15 @@ const PLUGIN_ID = "sift";
 function SessionSavings(props: { api: TuiPluginApi; sessionID: string }) {
 	const counter = new SessionSavingsCounter();
 	const family = new Set([props.sessionID]);
-	const [saved, setSaved] = createSignal(0);
+	let savedText: TextRenderable | undefined;
+	let disposed = false;
+	const render = () => {
+		if (!savedText || savedText.isDestroyed) return;
+		savedText.content = `${formatTokenCount(counter.total)} tokens saved`;
+	};
 
 	const update = (part: Parameters<SessionSavingsCounter["update"]>[0]) => {
-		if (counter.update(part)) setSaved(counter.total);
+		if (counter.update(part)) render();
 	};
 
 	for (const message of props.api.state.session.messages(props.sessionID)) {
@@ -36,7 +41,7 @@ function SessionSavings(props: { api: TuiPluginApi; sessionID: string }) {
 			family.has(event.properties.sessionID) &&
 			counter.remove(event.properties.partID)
 		) {
-			setSaved(counter.total);
+			render();
 		}
 	});
 	const loadSession = async (sessionID: string): Promise<void> => {
@@ -63,11 +68,18 @@ function SessionSavings(props: { api: TuiPluginApi; sessionID: string }) {
 			// Live part events still cover the new child if history loading fails.
 		});
 	});
-	onCleanup(() => {
+	const dispose = () => {
+		if (disposed) return;
+		disposed = true;
 		stopUpdated();
 		stopRemoved();
 		stopCreated();
-	});
+	};
+	const setSavedText = (node: TextRenderable) => {
+		savedText = node;
+		render();
+		node.once("destroyed", dispose);
+	};
 
 	void loadSession(props.sessionID).catch(() => {
 			// Live part events continue to update the counter if history loading fails.
@@ -78,9 +90,7 @@ function SessionSavings(props: { api: TuiPluginApi; sessionID: string }) {
 			<text fg={props.api.theme.current.text}>
 				<b>Sift</b>
 			</text>
-			<text fg={props.api.theme.current.success}>
-				{formatTokenCount(saved())} tokens saved
-			</text>
+			<text ref={setSavedText} fg={props.api.theme.current.success} />
 		</box>
 	);
 }

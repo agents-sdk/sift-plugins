@@ -10,13 +10,17 @@ OpenCode **插件**：用 [`@agent-context/sift`](https://www.npmjs.com/package/
 
 ## 安装
 
-推荐使用 CLI 安装，它会识别并注册包里的 server 和 TUI 两个入口：
+推荐使用 CLI 安装，它会自动注册包里的 server 和 TUI 两个入口：
 
 ```bash
 opencode plugin @agent-context/opencode-sift
 ```
 
-手动安装时，把 server 入口写入用户 / 全局 `~/.config/opencode/opencode.json`：
+安装后重启 OpenCode TUI。使用 CLI 时无需手动创建或修改 `opencode.json` 和 `tui.json`。
+
+### 手动安装（仅用于特殊场景）
+
+无法使用 CLI 时，把 server 入口写入用户 / 全局 `~/.config/opencode/opencode.json`：
 
 ```json
 {
@@ -91,6 +95,8 @@ OpenCode 自身截断过的输出（如超长 bash 输出）不会被恢复：�
 | 现象 | 检查 |
 | --- | --- |
 | 插件未加载 | 检查 `opencode.json` 语法与 OpenCode 版本（`>=1.18.26 <2`），然后重新安装插件 |
+| 右侧栏没有 Sift | 使用 `opencode plugin @agent-context/opencode-sift` 安装并重启 TUI；CLI 会同时注册 server 和 TUI 入口 |
+| Sift 始终显示 0 | 升级到 `>=0.0.7` 并重启 TUI；旧版的响应式文本在 OpenCode 插件运行环境中不会刷新 |
 | 找不到 sift 原生模块 | 重新安装插件，并确认包管理器允许安装适用于当前平台的 optional dependencies |
 | 没有压缩 | `minLength` 过大；执行失败或已被 OpenCode 截断；输出过短 |
 | 项目目录出现 `.sift` | stash 应位于 XDG data 目录；请检查 `XDG_DATA_HOME` 配置 |
