@@ -1,6 +1,6 @@
 # sift-plugins
 
-为 [Pi](https://github.com/earendil-works/pi)、[OpenCode](https://github.com/anomalyco/opencode) 和 [Claude Code](https://code.claude.com/) 提供的上下文压缩扩展：读文件、构建日志、搜索结果、diff 这类大段工具输出，在进入模型上下文之前先被自动压缩，降低 token 占用和 prompt cache 成本；被省略的细节由 Agent 按需取回。
+为 [Pi](https://github.com/earendil-works/pi)、[OpenCode](https://github.com/anomalyco/opencode)、[Claude Code](https://code.claude.com/) 和 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 提供的上下文压缩扩展：读文件、构建日志、搜索结果、diff 这类大段工具输出，在进入模型上下文之前先被自动压缩，降低 token 占用和 prompt cache 成本；被省略的细节由 Agent 按需取回。
 
 压缩由 [Sift](https://github.com/agents-sdk/sift) 完成，按内容类型选择策略，遵循「无损优先、有损可恢复」：优先做 JSON minify、日志模板化等无损压缩；需要有损压缩时，原文先暂存到本地，上下文里只留摘要和 `<<stash:HASH>>` 标记，Agent 确实需要细节时再通过 `sift_retrieve` 取回。支持构建 / 测试日志、JSON、搜索结果、unified diff、重复文本和多种语言源码。
 
@@ -11,6 +11,7 @@
 | [Pi](https://github.com/earendil-works/pi) | [`@agent-context/pi-sift`](https://www.npmjs.com/package/@agent-context/pi-sift) |
 | [OpenCode](https://github.com/anomalyco/opencode) | [`@agent-context/opencode-sift`](https://www.npmjs.com/package/@agent-context/opencode-sift) |
 | [Claude Code](https://code.claude.com/) | [`@agent-context/claude-code-sift`](https://www.npmjs.com/package/@agent-context/claude-code-sift) |
+| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) | `@agent-context/dsh-sift` |
 
 ## 装上之后
 
@@ -97,15 +98,26 @@ TUI 入口还需写入 `~/.config/opencode/tui.json`（项目级为 `.opencode/t
 
 安装后默认启用。工作机制（PostToolUse hook 改写输出、内置 MCP server 提供 `sift_retrieve`）、npm source 引用方式与故障排查见 [`@agent-context/claude-code-sift` 文档](claude-code-sift-plugin/README.md)。
 
+### DeepSeek Harness
+
+安装到需要启用的 dsh profile：
+
+```bash
+dsh plugin --profile web add /absolute/path/to/sift-plugins/dsh-sift-plugin
+dsh web
+```
+
+插件使用 `tools/post-execute` 压缩结果、注册 `sift_retrieve`，并默认提供 `/sift` 命令显示当前会话与进程累计节省的 token；完整配置和 TUI 限制见 [`@agent-context/dsh-sift` 文档](dsh-sift-plugin/README.md)。
+
 ## 配置
 
-全部可选，三个宿主语义一致：
+全部可选，四个宿主语义一致：
 
-| 想要 | Pi | OpenCode | Claude Code |
-| --- | --- | --- | --- |
-| 停用 | `--no-sift` 或 `SIFT_ENABLED=0` | `"enabled": false` | `SIFT_ENABLED=0` |
-| 只压缩更长的输出 | `--sift-min-length 400` 或 `SIFT_MIN_LENGTH` | `"minLength": 400` | `SIFT_MIN_LENGTH=400` |
-| 跳过指定工具 | `--sift-exclude bash,grep` 或 `SIFT_EXCLUDED_TOOLS` | `"excludedTools": ["bash", "grep"]` | `SIFT_EXCLUDED_TOOLS=Read,Grep` |
+| 想要 | Pi | OpenCode | Claude Code | DeepSeek Harness |
+| --- | --- | --- | --- | --- |
+| 停用 | `--no-sift` 或 `SIFT_ENABLED=0` | `"enabled": false` | `SIFT_ENABLED=0` | `enabled: false` |
+| 只压缩更长的输出 | `--sift-min-length 400` 或 `SIFT_MIN_LENGTH` | `"minLength": 400` | `SIFT_MIN_LENGTH=400` | `minLength: 400` |
+| 跳过指定工具 | `--sift-exclude bash,grep` 或 `SIFT_EXCLUDED_TOOLS` | `"excludedTools": ["bash", "grep"]` | `SIFT_EXCLUDED_TOOLS=Read,Grep` | `excludedTools: [bash, grep]` |
 
 Claude Code 的变量写在 `settings.json` 的 `env` 块或 shell 环境里。
 
@@ -120,6 +132,7 @@ Claude Code 的变量写在 `settings.json` 的 `env` 块或 shell 环境里。
 | Pi | `${PI_CODING_AGENT_DIR:-~/.pi/agent}/sift/{sessionId}/` |
 | OpenCode | `${XDG_DATA_HOME:-~/.local/share}/opencode/sift/{sessionID}/` |
 | Claude Code | `${CLAUDE_PLUGIN_DATA:-~/.claude}/stash/{session_id}/`（取回按内容寻址跨 session 命中） |
+| DeepSeek Harness | `${DSH_HOME:-~/.dsh}/sift/{sessionId}/` |
 
 - 原文以**明文**保存：不要用它压缩你不愿落盘的凭证；
 - 暂存目录始终位于项目工作树之外，不会出现在 `git status` 中；
@@ -134,7 +147,7 @@ Claude Code 的变量写在 `settings.json` 的 `env` 块或 shell 环境里。
 | Agent 取回原文失败 | 原文超过 30 分钟 TTL 或来自其他 session；重新执行原工具即可 |
 | 找不到原生模块 | 见对应包文档的故障排查一节 |
 
-`@agent-context/opencode-sift` 是社区插件，并非 OpenCode 或 Anomaly 官方项目，也未获得其官方背书。
+`@agent-context/opencode-sift` 与 `@agent-context/dsh-sift` 是社区插件，并非 OpenCode、Anomaly 或 DeepSeek 官方项目，也未获得其官方背书。
 
 ## 参与开发
 
@@ -147,13 +160,15 @@ sift-plugins/
 ├── pi-sift-extension/        # @agent-context/pi-sift
 ├── opencode-sift-plugin/     # @agent-context/opencode-sift
 ├── claude-code-sift-plugin/  # @agent-context/claude-code-sift
+├── dsh-sift-plugin/          # @agent-context/dsh-sift
 └── docs/
-    ├── contract-vectors.json # 三个适配器共用的契约测试向量
+    ├── contract-vectors.json # 四个适配器共用的契约测试向量
     ├── pi-opencode-plugin-plan.md
-    └── claude-code-plugin-plan.md
+    ├── claude-code-plugin-plan.md
+    └── dsh-sift-plugin-design.md
 ```
 
-三个包各自独立发布（v1 未抽取共享包），通过同一组 contract vectors 保持配置、key 校验和取回错误语义一致。宿主接入点等实现决策详见 [`docs/pi-opencode-plugin-plan.md`](docs/pi-opencode-plugin-plan.md) 与 [`docs/claude-code-plugin-plan.md`](docs/claude-code-plugin-plan.md)。
+四个包各自独立发布（v1 未抽取共享包），通过同一组 contract vectors 保持 key 校验、提示词和取回错误语义一致。宿主接入点等实现决策详见各包 README 与 [`docs/pi-opencode-plugin-plan.md`](docs/pi-opencode-plugin-plan.md)、[`docs/claude-code-plugin-plan.md`](docs/claude-code-plugin-plan.md)、[`docs/dsh-sift-plugin-design.md`](docs/dsh-sift-plugin-design.md)。
 
 本地开发需要支持 `--experimental-strip-types` 的 Node.js（建议 22.6+）：
 
@@ -161,9 +176,10 @@ sift-plugins/
 cd pi-sift-extension && npm install && npm test
 cd ../opencode-sift-plugin && npm install && npm test
 cd ../claude-code-sift-plugin && npm install && npm test && npm run build
+cd ../dsh-sift-plugin && npm install && npm test
 ```
 
-提交前建议三个目录的测试都通过；`claude-code-sift-plugin` 还需重新构建 `dist/`（产物随仓库提交）。
+提交前建议四个目录的测试都通过；`claude-code-sift-plugin` 还需重新构建 `dist/`（产物随仓库提交）。
 
 ## 许可证
 

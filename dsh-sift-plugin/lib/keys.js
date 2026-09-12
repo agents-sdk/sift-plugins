@@ -1,0 +1,17 @@
+const BARE_KEY = /^[0-9a-fA-F]{24}$/;
+const FULL_MARKER = /^<<stash:([0-9a-fA-F]{24})>>$/;
+const MARKER_IN_TEXT = /<<stash:[0-9a-fA-F]{24}>>/;
+
+export function parseStashKey(raw) {
+	if (typeof raw !== "string") return { ok: false, reason: "invalid" };
+	const trimmed = raw.trim();
+	if (!trimmed) return { ok: false, reason: "empty" };
+	const marker = trimmed.match(FULL_MARKER);
+	if (marker) return { ok: true, key: marker[1] };
+	if (BARE_KEY.test(trimmed)) return { ok: true, key: trimmed };
+	return { ok: false, reason: "invalid" };
+}
+
+export function containsValidStashMarker(text) {
+	return MARKER_IN_TEXT.test(text);
+}

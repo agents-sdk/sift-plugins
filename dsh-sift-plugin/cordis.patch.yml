@@ -1,0 +1,8 @@
+- insert:
+    - id: sift
+      name: '@agent-context/dsh-sift'
+      config:
+        enabled: true
+        minLength: 200
+        excludedTools: []
+        showSavings: command

@@ -1,0 +1,40 @@
+{
+  "name": "@agent-context/dsh-sift",
+  "version": "0.0.1",
+  "description": "DeepSeek Harness plugin that compresses tool results with @agent-context/sift",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "lib",
+    "README.md"
+  ],
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "sift",
+    "context-compression"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@agent-context/sift": "0.0.1"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": ">=0.1.5-rc.2 <0.2"
+  },
+  "engines": {
+    "node": "^22.19 || >=24"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
