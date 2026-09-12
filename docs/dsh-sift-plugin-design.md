@@ -29,7 +29,7 @@ dsh 的外部插件是 npm bundle。包清单通过：
 }
 ```
 
-声明配置层，`dsh plugin --profile <name> add <spec>` 安装依赖并把 bundle 追加到 profile。`cordis.patch.yml` 插入普通 Cordis function plugin row；`apply(ctx, config)` 从 profile 获取配置。bundle 成员变化需要重启，profile patch 内容可由 dsh 自身的 reload 策略刷新。
+声明配置层，`dsh plugin --profile <name> add @agent-context/dsh-sift` 从 npm 安装依赖并把 bundle 追加到 profile。`cordis.patch.yml` 插入普通 Cordis function plugin row；`apply(ctx, config)` 从 profile 获取配置。bundle 成员变化需要重启，profile patch 内容可由 dsh 自身的 reload 策略刷新。
 
 本插件使用不含 TypeScript runtime loader 依赖的 ESM JavaScript 发布面，并只在运行时依赖 `@agent-context/sift`。`@deepseek-ai/dsh-tools` 作为 peer compatibility 声明，不从插件内复制或启动 Harness。
 

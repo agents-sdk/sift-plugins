@@ -1,8 +1,11 @@
 {
   "name": "@agent-context/dsh-sift",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "DeepSeek Harness plugin that compresses tool results with @agent-context/sift",
   "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "./index.js",
   "exports": {
@@ -30,7 +33,7 @@
     "@deepseek-ai/dsh-tools": ">=0.1.5-rc.2 <0.2"
   },
   "engines": {
-    "node": "^22.19 || >=24"
+    "node": "^22.19 || >=24.2"
   },
   "dsh": {
     "bundle": {

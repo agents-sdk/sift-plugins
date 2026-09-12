@@ -2,21 +2,28 @@
 
 DeepSeek Harness（dsh）的 Sift 工具结果压缩插件。它通过原生 `tools/post-execute` waterfall 在工具结果写入会话并进入下一次模型请求前压缩纯文本内容；有损压缩会把原文暂存到本地，并注册 `sift_retrieve` 工具供 Agent 按 `<<stash:KEY>>` 取回。
 
-要求 Node.js `^22.19 || >=24`，以及 DeepSeek Harness `0.1.5-rc.2` 或兼容的 `0.1.x` 版本。
+要求 Node.js `^22.19 || >=24.2`，以及 DeepSeek Harness `0.1.5-rc.2` 或兼容的 `0.1.x` 版本。Node 24.0–24.1 尚无 dsh CLI 入口使用的 `import.meta.main`，会导致命令静默退出。先确认 `dsh --version` 可用；尚未安装时，先安装当前 developer preview CLI：
+
+```bash
+npm install -g @deepseek-ai/dsh@next
+dsh --version
+```
+
+使用 Volta 且 Node 版本低于要求时，可先运行 `volta install node@24`；使用 nvm 时运行 `nvm install 24 && nvm use 24`，并确认得到的版本不低于 24.2。
 
 ## 安装
 
-从本仓库 checkout 安装到所需 profile：
+从 npm 安装到所需 profile：
 
 ```bash
-dsh plugin --profile web add /absolute/path/to/sift-plugins/dsh-sift-plugin
+dsh plugin --profile web add @agent-context/dsh-sift
 dsh web
 ```
 
 其他 profile 同理：
 
 ```bash
-dsh plugin --profile tui add /absolute/path/to/sift-plugins/dsh-sift-plugin
+dsh plugin --profile tui add @agent-context/dsh-sift
 dsh --profile tui
 ```
 

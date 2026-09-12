@@ -11,7 +11,7 @@
 | [Pi](https://github.com/earendil-works/pi) | [`@agent-context/pi-sift`](https://www.npmjs.com/package/@agent-context/pi-sift) |
 | [OpenCode](https://github.com/anomalyco/opencode) | [`@agent-context/opencode-sift`](https://www.npmjs.com/package/@agent-context/opencode-sift) |
 | [Claude Code](https://code.claude.com/) | [`@agent-context/claude-code-sift`](https://www.npmjs.com/package/@agent-context/claude-code-sift) |
-| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) | `@agent-context/dsh-sift` |
+| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) | [`@agent-context/dsh-sift`](https://www.npmjs.com/package/@agent-context/dsh-sift) |
 
 ## 装上之后
 
@@ -100,10 +100,16 @@ TUI 入口还需写入 `~/.config/opencode/tui.json`（项目级为 `.opencode/t
 
 ### DeepSeek Harness
 
-安装到需要启用的 dsh profile：
+要求 Node.js `^22.19 || >=24.2`；Node 24.0–24.1 会让当前 dsh CLI 静默退出。尚未安装 dsh CLI 时先执行：
 
 ```bash
-dsh plugin --profile web add /absolute/path/to/sift-plugins/dsh-sift-plugin
+npm install -g @deepseek-ai/dsh@next
+```
+
+然后安装到需要启用的 dsh profile：
+
+```bash
+dsh plugin --profile web add @agent-context/dsh-sift
 dsh web
 ```
 
