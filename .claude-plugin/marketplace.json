@@ -18,6 +18,19 @@
 			"repository": "https://github.com/agents-sdk/sift-plugins",
 			"license": "Apache-2.0",
 			"keywords": ["sift", "context-compression", "compression"]
+		},
+		{
+			"name": "codex-sift-plugin",
+			"source": "./codex-sift-plugin",
+			"description": "Compresses Codex tool outputs with sift, provides retrieval, and reports saved tokens",
+			"author": {
+				"name": "agents-sdk",
+				"url": "https://github.com/agents-sdk"
+			},
+			"homepage": "https://github.com/agents-sdk/sift-plugins/tree/main/codex-sift-plugin",
+			"repository": "https://github.com/agents-sdk/sift-plugins",
+			"license": "Apache-2.0",
+			"keywords": ["codex", "sift", "context-compression", "tokens"]
 		}
 	]
 }

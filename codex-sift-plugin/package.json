@@ -1,0 +1,16 @@
+{
+  "name": "@agent-context/codex-sift",
+  "version": "0.1.1",
+  "description": "Codex plugin that compresses tool results with @agent-context/sift",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": ["plugin.json", "mcp.json", ".codex-plugin", ".mcp.json", "hooks", "skills", "dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "node --test --experimental-strip-types test/*.test.ts"
+  },
+  "dependencies": { "@agent-context/sift": "0.0.1" },
+  "devDependencies": { "@types/node": "^22.15.0", "typescript": "^5.8.0" },
+  "engines": { "node": ">=18", "codex": ">=0.145.0" }
+}

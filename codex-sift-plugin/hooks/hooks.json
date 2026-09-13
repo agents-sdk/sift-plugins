@@ -1,0 +1,22 @@
+{
+  "description": "Compress large Codex tool results with sift.",
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "node \"$PLUGIN_ROOT/dist/hooks/session-start.js\"",
+        "timeout": 10,
+        "statusMessage": "Starting Sift"
+      }]
+    }],
+    "PostToolUse": [{
+      "matcher": "*",
+      "hooks": [{
+        "type": "command",
+        "command": "node \"$PLUGIN_ROOT/dist/hooks/post-tool-use.js\"",
+        "timeout": 30,
+        "statusMessage": "Compressing tool output with Sift"
+      }]
+    }]
+  }
+}

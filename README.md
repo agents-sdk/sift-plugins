@@ -1,6 +1,6 @@
 # sift-plugins
 
-为 [Pi](https://github.com/earendil-works/pi)、[OpenCode](https://github.com/anomalyco/opencode)、[Claude Code](https://code.claude.com/) 和 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 提供的上下文压缩扩展：读文件、构建日志、搜索结果、diff 这类大段工具输出，在进入模型上下文之前先被自动压缩，降低 token 占用和 prompt cache 成本；被省略的细节由 Agent 按需取回。
+为 [Codex](https://developers.openai.com/codex/)、[Pi](https://github.com/earendil-works/pi)、[OpenCode](https://github.com/anomalyco/opencode)、[Claude Code](https://code.claude.com/) 和 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 提供的上下文压缩扩展：读文件、构建日志、搜索结果、diff 这类大段工具输出，在进入模型上下文之前先被自动压缩，降低 token 占用和 prompt cache 成本；被省略的细节由 Agent 按需取回。
 
 压缩由 [Sift](https://github.com/agents-sdk/sift) 完成，按内容类型选择策略，遵循「无损优先、有损可恢复」：优先做 JSON minify、日志模板化等无损压缩；需要有损压缩时，原文先暂存到本地，上下文里只留摘要和 `<<stash:HASH>>` 标记，Agent 确实需要细节时再通过 `sift_retrieve` 取回。支持构建 / 测试日志、JSON、搜索结果、unified diff、重复文本和多种语言源码。
 
@@ -8,6 +8,7 @@
 
 | 宿主 | npm 包 |
 | --- | --- |
+| [Codex](https://developers.openai.com/codex/) | [`@agent-context/codex-sift`](https://www.npmjs.com/package/@agent-context/codex-sift) |
 | [Pi](https://github.com/earendil-works/pi) | [`@agent-context/pi-sift`](https://www.npmjs.com/package/@agent-context/pi-sift) |
 | [OpenCode](https://github.com/anomalyco/opencode) | [`@agent-context/opencode-sift`](https://www.npmjs.com/package/@agent-context/opencode-sift) |
 | [Claude Code](https://code.claude.com/) | [`@agent-context/claude-code-sift`](https://www.npmjs.com/package/@agent-context/claude-code-sift) |
@@ -39,6 +40,17 @@
 - 压缩没有实际收益，或内容已含 `<<stash:HASH>>` 标记。
 
 ## 安装
+
+### Codex CLI / App
+
+当前预览版要求 Codex CLI `>=0.145.0` 和 Node.js `>=18`。Codex CLI 与桌面 App 共用本地主机上的插件、hook 和 MCP 配置：
+
+```bash
+codex plugin marketplace add agents-sdk/sift-plugins
+codex plugin add codex-sift-plugin@agent-context
+```
+
+安装完成后，大工具输出压缩成功时，界面会显示 `Sift saved X tokens in this session`；也可以让 Agent 调用 `sift_stats`。详细限制和配置见 [`codex-sift-plugin/README.md`](codex-sift-plugin/README.md)。
 
 ### Pi
 
@@ -161,8 +173,11 @@ Claude Code 的变量写在 `settings.json` 的 `env` 块或 shell 环境里。
 
 ```text
 sift-plugins/
+├── .agents/plugins/
+│   └── marketplace.json      # Codex / ChatGPT portable marketplace
 ├── .claude-plugin/
-│   └── marketplace.json      # "agent-context" marketplace（Claude Code 安装入口）
+│   └── marketplace.json      # Claude Code compatibility marketplace
+├── codex-sift-plugin/        # @agent-context/codex-sift
 ├── pi-sift-extension/        # @agent-context/pi-sift
 ├── opencode-sift-plugin/     # @agent-context/opencode-sift
 ├── claude-code-sift-plugin/  # @agent-context/claude-code-sift

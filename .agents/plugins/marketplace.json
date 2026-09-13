@@ -1,0 +1,22 @@
+{
+  "name": "agent-context",
+  "interface": {
+    "displayName": "Agent Context"
+  },
+  "plugins": [
+    {
+      "name": "codex-sift-plugin",
+      "source": {
+        "source": "npm",
+        "package": "@agent-context/codex-sift",
+        "version": "^0.1.1",
+        "registry": "https://registry.npmjs.org"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "codex-sift-plugin",
+  "version": "0.1.1",
+  "description": "Compresses large Codex tool outputs with sift and reports saved tokens.",
+  "author": {
+    "name": "agent-context"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "codex",
+    "sift",
+    "context-compression",
+    "tokens"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Sift for Codex",
+    "shortDescription": "Compress tool output and track saved tokens.",
+    "longDescription": "Uses Codex lifecycle hooks to compress large local tool outputs before the next model step, keeps lossy originals in a short-lived local stash, and exposes retrieval and savings tools through MCP.",
+    "developerName": "agent-context",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Tool output compression",
+      "Local stash retrieval",
+      "Token savings stats"
+    ],
+    "defaultPrompt": [
+      "Show how many tokens Sift has saved in this Codex session.",
+      "Explain how Sift compresses tool output in Codex."
+    ]
+  }
+}
