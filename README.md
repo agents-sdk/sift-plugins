@@ -112,7 +112,7 @@ TUI 入口还需写入 `~/.config/opencode/tui.json`（项目级为 `.opencode/t
 
 ### DeepSeek Harness
 
-要求 Node.js `^22.19 || >=24.2`；Node 24.0–24.1 会让当前 dsh CLI 静默退出。尚未安装 dsh CLI 时先执行：
+插件本身要求 Node.js `>=22.19`，因此可在 Node 23.11.1 上通过 dsh SDK 或其他显式加载方式使用。当前标准 dsh CLI 另外要求 Node.js `^22.19 || >=24.2`；Node 23.x 和 Node 24.0–24.1 会因 CLI 入口依赖 `import.meta.main` 而静默退出。尚未安装 dsh CLI 时先执行：
 
 ```bash
 npm install -g @deepseek-ai/dsh@next

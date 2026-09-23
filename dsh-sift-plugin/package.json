@@ -33,7 +33,7 @@
     "@deepseek-ai/dsh-tools": ">=0.1.5-rc.2 <0.2"
   },
   "engines": {
-    "node": "^22.19 || >=24.2"
+    "node": ">=22.19"
   },
   "dsh": {
     "bundle": {
